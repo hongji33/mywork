@@ -93,11 +93,11 @@
             <span>🚀 인텔리전트 업무 대시보드 가이드</span>
           </h3>
           <p class="text-xs text-indigo-200">
-            각 열의 제목을 클릭하여 직접 수정할 수 있습니다. 각 리스트당 최대 10개까지 추가 가능하며, 체크하면 즉시 하단으로 정렬되고 글자가 굵어지며 삭제 버튼이 감춰집니다!
+            각 열의 제목을 클릭하여 직접 수정할 수 있습니다. 각 리스트당 최대 10개까지 추가 가능하며, 체크하면 즉시 하단으로 정렬되고 글자가 굵어지며 삭제 버튼이 감춰집니다! 작성한 모든 데이터는 자동 저장됩니다.
           </p>
         </div>
         <span class="text-xs bg-indigo-800 border border-indigo-700 font-bold px-3 py-1 rounded-full text-indigo-300 hidden sm:inline">
-          실시간 안전 저장
+          자동 실시간 저장 중
         </span>
       </div>
 
@@ -280,25 +280,21 @@
   <!-- 대시보드 하단 푸터 -->
   <footer class="bg-white border-t border-slate-200 py-6 mt-12">
     <div class="max-w-7xl mx-auto px-4 text-center text-[10px] text-slate-400 font-semibold tracking-wider uppercase">
-      &copy; 2026 Smart WorkSpace System. 모든 정보는 실시간 인메모리에 안전하게 유지되고 보관됩니다.
+      &copy; 2026 Smart WorkSpace System. 모든 정보는 브라우저 로컬 스토리지에 자동 저장됩니다.
     </div>
   </footer>
 
   <!-- 순수 자바스크립트 애플리케이션 로직 -->
   <script>
-    // --- 초기 상태 및 더미 데이터 설정 ---
-    let categories = [
+    // --- 초기 상태 및 기본 샘플 데이터 설정 (로컬스토리지가 비어있을 때 사용됨) ---
+    const DEFAULT_CATEGORIES = [
       { id: 'cat-1', name: '기획 & 전략', color: '#3B82F6' },
       { id: 'cat-2', name: '개발 & 기술', color: '#10B981' },
       { id: 'cat-3', name: '디자인 & UI', color: '#8B5CF6' },
       { id: 'cat-4', name: '마케팅 & 영업', color: '#F59E0B' },
     ];
 
-    // 현재 사용자 화면에 표출할 열 개수 상태값 (3, 4, 5 선택 가능)
-    let columnCount = 3;
-
-    // 최대 5열까지의 프로젝트 타이틀 대응
-    let listTitles = {
+    const DEFAULT_LIST_TITLES = {
       1: '🔥 긴급 업무 및 프로젝트',
       2: '📅 데일리 체크리스트',
       3: '💡 아이디어 및 장기 검토',
@@ -306,7 +302,7 @@
       5: '🛠 추가 프로젝트 B'
     };
 
-    let todos = [
+    const DEFAULT_TODOS = [
       { id: 't-1', text: '하반기 신규 서비스 기획서 마감', completed: false, starred: true, listId: 1, createdAt: Date.now() },
       { id: 't-2', text: '주간 부서 간담회 자료 취합', completed: true, starred: false, listId: 1, createdAt: Date.now() + 1 },
       { id: 't-3', text: '메인 API 성능 최적화 테스트 진행', completed: false, starred: true, listId: 2, createdAt: Date.now() + 2 },
@@ -316,7 +312,7 @@
       { id: 't-7', text: '기존 시스템 레거시 코드 정리', completed: true, starred: false, listId: 5, createdAt: Date.now() + 6 }
     ];
 
-    let memos = [
+    const DEFAULT_MEMOS = [
       {
         id: 'memo-1',
         title: '서버 명령어 가이드라인',
@@ -333,9 +329,25 @@
       }
     ];
 
+    // --- 변수 상태 초기 로드 (LocalStorage 연계) ---
+    let categories = JSON.parse(localStorage.getItem('sw_categories')) || DEFAULT_CATEGORIES;
+    let columnCount = parseInt(localStorage.getItem('sw_columnCount')) || 3;
+    let listTitles = JSON.parse(localStorage.getItem('sw_listTitles')) || DEFAULT_LIST_TITLES;
+    let todos = JSON.parse(localStorage.getItem('sw_todos')) || DEFAULT_TODOS;
+    let memos = JSON.parse(localStorage.getItem('sw_memos')) || DEFAULT_MEMOS;
+
     let activeTab = 'todo';
     let searchQuery = '';
     let filterCategory = 'all';
+
+    // --- 데이터를 로컬 스토리지에 실시간 보관하는 도우미 함수 ---
+    function saveToLocalStorage() {
+      localStorage.setItem('sw_categories', JSON.stringify(categories));
+      localStorage.setItem('sw_columnCount', columnCount);
+      localStorage.setItem('sw_listTitles', JSON.stringify(listTitles));
+      localStorage.setItem('sw_todos', JSON.stringify(todos));
+      localStorage.setItem('sw_memos', JSON.stringify(memos));
+    }
 
     // --- 유틸리티 함수: 알림 제공 ---
     function showAlert(message, type = 'success') {
@@ -367,6 +379,7 @@
     // --- 열 개수 변경 핸들러 ---
     function changeColumnCount(count) {
       columnCount = count;
+      saveToLocalStorage(); // 저장
       
       // 상단 선택 버튼 UI 업데이트
       [3, 4, 5].forEach(c => {
@@ -428,6 +441,7 @@
     // --- 1. 투두 리스트 비즈니스 로직 ---
     function handleTitleChange(listId, newTitle) {
       listTitles[listId] = newTitle;
+      saveToLocalStorage(); // 저장
     }
 
     function handleAddTodo(listId, event) {
@@ -453,6 +467,7 @@
 
       todos.push(newTodo);
       inputEl.value = '';
+      saveToLocalStorage(); // 저장
       showAlert('업무가 등록되었습니다.');
       render();
     }
@@ -470,23 +485,27 @@
         }
         return t;
       });
+      saveToLocalStorage(); // 저장
       render();
     }
 
     // 투두 중요 표시 (별표시) 토글
     function handleToggleStar(todoId) {
       todos = todos.map(t => t.id === todoId ? { ...t, starred: !t.starred } : t);
+      saveToLocalStorage(); // 저장
       render();
     }
 
     function handleDeleteTodo(todoId) {
       todos = todos.filter(t => t.id !== todoId);
+      saveToLocalStorage(); // 저장
       showAlert('업무가 삭제되었습니다.', 'info');
       render();
     }
 
     function handleDirectStatus(todoId, targetListId) {
       todos = todos.map(t => t.id === todoId ? { ...t, listId: targetListId } : t);
+      saveToLocalStorage(); // 저장
       render();
     }
 
@@ -544,6 +563,7 @@
 
       titleInput.value = '';
       contentInput.value = '';
+      saveToLocalStorage(); // 저장
       render();
     }
 
@@ -575,6 +595,7 @@
 
     function handleDeleteMemo(id) {
       memos = memos.filter(m => m.id !== id);
+      saveToLocalStorage(); // 저장
       showAlert('메모가 삭제되었습니다.', 'info');
       render();
     }
@@ -597,6 +618,7 @@
 
       categories.push(newCat);
       nameInput.value = '';
+      saveToLocalStorage(); // 저장
       showAlert('업무 분야가 추가되었습니다.');
       render();
     }
@@ -611,6 +633,7 @@
       memos = memos.map(m => m.categoryId === catId ? { ...m, categoryId: fallbackId } : m);
       categories = categories.filter(c => c.id !== catId);
       
+      saveToLocalStorage(); // 저장
       showAlert('분야가 삭제되었으며, 기존 메모는 다른 분야로 이전되었습니다.', 'info');
       render();
     }
@@ -918,7 +941,8 @@
 
     // --- 앱 최초 실행 및 렌더링 ---
     window.addEventListener('DOMContentLoaded', () => {
-      render();
+      // 로드할 때 세팅된 초기 열 개수에 따른 버튼 활성화 UI 복원
+      changeColumnCount(columnCount);
     });
   </script>
 </body>
