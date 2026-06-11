@@ -57,44 +57,35 @@
   <!-- 메인 레이아웃 본문 -->
   <div class="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6">
     
-    <!-- 업무 진척 상황 바 -->
-    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
-      <div class="flex items-center space-x-3 w-full sm:w-auto">
-        <div class="p-2 bg-indigo-50 rounded-lg text-indigo-600">
+    <!-- 업무 진척 상황 바 & 레이아웃 조절 통합 탑 바 (같은 층 가로 배치) -->
+    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
+      
+      <!-- 왼쪽 반: 전체 업무 완료 현황 -->
+      <div class="flex items-center space-x-3 w-full md:w-1/2">
+        <div class="p-2 bg-indigo-50 rounded-lg text-indigo-600 flex-shrink-0">
           <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
         </div>
-        <div>
-          <div class="text-xs text-slate-400 font-bold">전체 업무 완료 현황</div>
-          <div id="progress-text" class="text-sm font-extrabold text-slate-800">전체 0개 중 0개 완료 (0%)</div>
+        <div class="flex-1 min-w-0">
+          <div class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">전체 업무 완료 현황</div>
+          <div id="progress-text" class="text-xs sm:text-sm font-extrabold text-slate-800 truncate">전체 0개 중 0개 완료 (0%)</div>
+        </div>
+        <div class="w-1/2 bg-slate-100 h-2 rounded-full overflow-hidden flex-shrink-0 hidden sm:block">
+          <div id="progress-bar-fill" class="h-full bg-indigo-600 transition-all duration-500 rounded-full" style="width: 0%"></div>
         </div>
       </div>
-      <div class="w-full sm:w-72 bg-slate-100 h-2.5 rounded-full overflow-hidden">
-        <div id="progress-bar-fill" class="h-full bg-indigo-600 transition-all duration-500 rounded-full" style="width: 0%"></div>
+
+      <!-- 오른쪽 반: 3열, 4열, 5열 선택 (불필요한 글자를 모두 빼고 심플한 버튼만 배치) -->
+      <div id="layout-select-container" class="flex items-center space-x-1 bg-slate-100 p-1 rounded-xl flex-shrink-0 w-full sm:w-auto justify-center">
+        <button id="btn-col-3" onclick="changeColumnCount(3)" class="px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all bg-white text-indigo-600 shadow-sm">3열</button>
+        <button id="btn-col-4" onclick="changeColumnCount(4)" class="px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all text-slate-600 hover:text-slate-900">4열</button>
+        <button id="btn-col-5" onclick="changeColumnCount(5)" class="px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all text-slate-600 hover:text-slate-900">5열</button>
       </div>
+
     </div>
 
     <!-- 1. 핵심 투두리스트 탭 패널 -->
     <section id="panel-todo" class="space-y-6">
       
-      <!-- 레이아웃 조절 상자 (3열, 4열, 5열 선택기) -->
-      <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div class="flex items-center space-x-2.5">
-          <div class="bg-indigo-50 p-1.5 rounded-lg text-indigo-600">
-            <i data-lucide="layout" class="w-4 h-4"></i>
-          </div>
-          <div>
-            <h4 class="text-xs font-bold text-slate-700">대시보드 레이아웃 조절</h4>
-            <p class="text-[10px] text-slate-400 font-medium">원하는 개수의 업무 목록 열을 유동적으로 배치하세요</p>
-          </div>
-        </div>
-        
-        <div class="flex items-center space-x-1 bg-slate-100 p-1 rounded-xl self-start sm:self-auto">
-          <button id="btn-col-3" onclick="changeColumnCount(3)" class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all bg-white text-indigo-600 shadow-sm">3열로 보기</button>
-          <button id="btn-col-4" onclick="changeColumnCount(4)" class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all text-slate-600 hover:text-slate-900">4열로 보기</button>
-          <button id="btn-col-5" onclick="changeColumnCount(5)" class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all text-slate-600 hover:text-slate-900">5열로 보기</button>
-        </div>
-      </div>
-
       <!-- 가이드 안내 카드 -->
       <div class="bg-indigo-900 text-white p-4 rounded-2xl shadow-md flex items-center justify-between">
         <div class="space-y-1">
@@ -381,9 +372,9 @@
       [3, 4, 5].forEach(c => {
         const btn = document.getElementById(`btn-col-${c}`);
         if (c === count) {
-          btn.className = "px-3 py-1.5 text-xs font-bold rounded-lg transition-all bg-white text-indigo-600 shadow-sm";
+          btn.className = "px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all bg-white text-indigo-600 shadow-sm";
         } else {
-          btn.className = "px-3 py-1.5 text-xs font-bold rounded-lg transition-all text-slate-600 hover:text-slate-900";
+          btn.className = "px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all text-slate-600 hover:text-slate-900";
         }
       });
 
@@ -408,6 +399,16 @@
           panel.classList.add('hidden');
         }
       });
+
+      // 레이아웃 조절기 표시/숨김 처리 (투두리스트 탭일 때만 노출)
+      const layoutContainer = document.getElementById('layout-select-container');
+      if (tabId === 'todo') {
+        layoutContainer.classList.remove('hidden');
+        layoutContainer.classList.add('flex');
+      } else {
+        layoutContainer.classList.add('hidden');
+        layoutContainer.classList.remove('flex');
+      }
 
       render();
     }
@@ -472,6 +473,7 @@
       render();
     }
 
+    // 투두 중요 표시 (별표시) 토글
     function handleToggleStar(todoId) {
       todos = todos.map(t => t.id === todoId ? { ...t, starred: !t.starred } : t);
       render();
@@ -566,7 +568,7 @@
       document.getElementById('editing-memo-id').value = '';
       document.getElementById('memo-title-input').value = '';
       document.getElementById('memo-content-input').value = '';
-      document.getElementById('memo-form-title').innerText = '새로운 업무 메모 등록';
+      document.getElementById('memo-form-title').innerText = '새로운 업무 업무 메모 등록';
       document.getElementById('memo-submit-btn').innerText = '메모장에 등록하기';
       document.getElementById('memo-cancel-btn').classList.add('hidden');
     }
