@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -29,7 +30,7 @@
         </div>
         <div>
           <h1 class="text-lg font-extrabold text-slate-900 tracking-tight">Smart WorkSpace</h1>
-          <p class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">메모 & 멀티 투두 스마트 대시보드</p>
+          <p class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">클라우드 실시간 동기화 대시보드</p>
         </div>
       </div>
 
@@ -55,9 +56,49 @@
   <div id="alert-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
   <!-- 메인 레이아웃 본문 -->
-  <div class="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+  <div class="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 space-y-4">
     
-    <!-- 업무 진척 상황 바 & 레이아웃 조절 통합 탑 바 (같은 층 가로 배치) -->
+    <!-- 1층: 스마트 클라우드 연동 제어 바 (새로 도입됨) -->
+    <div class="bg-gradient-to-r from-slate-900 to-indigo-950 text-white p-4 rounded-2xl shadow-md flex flex-col lg:flex-row items-center justify-between gap-4">
+      <div class="flex items-center space-x-3 w-full lg:w-auto">
+        <div class="p-2.5 bg-white/10 rounded-xl text-indigo-300">
+          <i data-lucide="smartphone" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">스마트폰 연결 및 실시간 공유</h3>
+          <p class="text-[11px] text-slate-400 mt-0.5">아래 코드나 링크를 휴대폰에 열면 PC 데이터와 실시간 연동됩니다.</p>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-end">
+        <!-- 워크스페이스 코드 표기 및 복사 -->
+        <div class="flex items-center space-x-1 bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs">
+          <span class="text-[10px] text-slate-400 font-bold uppercase mr-1">현재 동기화 코드 :</span>
+          <span id="current-ws-code" class="font-mono font-bold text-indigo-300 tracking-wider">불러오는 중...</span>
+          <button onclick="copyShareLink()" class="ml-2 p-1 hover:bg-white/10 rounded text-slate-300" title="모바일 공유 링크 복사">
+            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+
+        <!-- 다른 코드 입력하여 동기화 연결 -->
+        <div class="flex items-center space-x-1 w-full sm:w-auto">
+          <input 
+            type="text" 
+            id="target-ws-code" 
+            placeholder="동기화 코드 입력" 
+            class="bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 w-32 font-mono"
+          />
+          <button 
+            onclick="connectToWorkspace()" 
+            class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-3 py-1.5 rounded-lg transition-colors"
+          >
+            연결
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2층: 업무 진척 상황 바 & 레이아웃 조절 통합 탑 바 (같은 층 가로 배치) -->
     <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
       
       <!-- 왼쪽 반: 전체 업무 완료 현황 -->
@@ -96,8 +137,8 @@
             각 열의 제목을 클릭하여 직접 수정할 수 있습니다. 각 리스트당 최대 10개까지 추가 가능하며, 체크하면 즉시 하단으로 정렬되고 글자가 굵어지며 삭제 버튼이 감춰집니다! 작성한 모든 데이터는 자동 저장됩니다.
           </p>
         </div>
-        <span class="text-xs bg-indigo-800 border border-indigo-700 font-bold px-3 py-1 rounded-full text-indigo-300 hidden sm:inline">
-          자동 실시간 저장 중
+        <span class="text-xs bg-indigo-800 border border-indigo-700 font-bold px-3 py-1 rounded-full text-indigo-300 hidden sm:inline animate-pulse">
+          실시간 클라우드 동기화 중
         </span>
       </div>
 
@@ -284,9 +325,21 @@
     </div>
   </footer>
 
-  <!-- 순수 자바스크립트 애플리케이션 로직 -->
-  <script>
-    // --- 초기 상태 및 기본 샘플 데이터 설정 (로컬스토리지가 비어있을 때 사용됨) ---
+  <!-- Firebase 및 클라우드 연동을 위한 모듈 스크립트화 -->
+  <script type="module">
+    // --- Firebase SDK 로드 및 초기화 ---
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // 기본 가상 환경 설정 복구용 폴백
+    const firebaseConfig = JSON.parse(__firebase_config);
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+    // --- 기본 샘플 데이터 정의 ---
     const DEFAULT_CATEGORIES = [
       { id: 'cat-1', name: '기획 & 전략', color: '#3B82F6' },
       { id: 'cat-2', name: '개발 & 기술', color: '#10B981' },
@@ -307,9 +360,7 @@
       { id: 't-2', text: '주간 부서 간담회 자료 취합', completed: true, starred: false, listId: 1, createdAt: Date.now() + 1 },
       { id: 't-3', text: '메인 API 성능 최적화 테스트 진행', completed: false, starred: true, listId: 2, createdAt: Date.now() + 2 },
       { id: 't-4', text: '일일 스크럼 참여 및 이슈 브리핑', completed: false, starred: false, listId: 2, createdAt: Date.now() + 3 },
-      { id: 't-5', text: '해외 벤치마킹 디자인 사례 분석', completed: false, starred: false, listId: 3, createdAt: Date.now() + 4 },
-      { id: 't-6', text: '기획안 신규 아이콘 에셋 확보', completed: false, starred: false, listId: 4, createdAt: Date.now() + 5 },
-      { id: 't-7', text: '기존 시스템 레거시 코드 정리', completed: true, starred: false, listId: 5, createdAt: Date.now() + 6 }
+      { id: 't-5', text: '해외 벤치마킹 디자인 사례 분석', completed: false, starred: false, listId: 3, createdAt: Date.now() + 4 }
     ];
 
     const DEFAULT_MEMOS = [
@@ -329,28 +380,100 @@
       }
     ];
 
-    // --- 변수 상태 초기 로드 (LocalStorage 연계) ---
-    let categories = JSON.parse(localStorage.getItem('sw_categories')) || DEFAULT_CATEGORIES;
-    let columnCount = parseInt(localStorage.getItem('sw_columnCount')) || 3;
-    let listTitles = JSON.parse(localStorage.getItem('sw_listTitles')) || DEFAULT_LIST_TITLES;
-    let todos = JSON.parse(localStorage.getItem('sw_todos')) || DEFAULT_TODOS;
-    let memos = JSON.parse(localStorage.getItem('sw_memos')) || DEFAULT_MEMOS;
+    // --- 기기 간 공유 연동(Workspace ID) 결정 로직 ---
+    function getWorkspaceId() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlWs = urlParams.get('ws');
+      if (urlWs) {
+        localStorage.setItem('sw_current_ws', urlWs);
+        return urlWs;
+      }
+      
+      const localWs = localStorage.getItem('sw_current_ws');
+      if (localWs) {
+        return localWs;
+      }
+
+      // 처음 접속자에게 랜덤 6자리 연동 코드 부여
+      const randomId = 'ws-' + Math.random().toString(36).substr(2, 6).toUpperCase();
+      localStorage.setItem('sw_current_ws', randomId);
+      return randomId;
+    }
+
+    let workspaceId = getWorkspaceId();
+    let currentAuthUser = null;
+    let unsubscribeSync = null;
+
+    // --- 전역 인메모리 대시보드 상태 ---
+    let categories = DEFAULT_CATEGORIES;
+    let columnCount = 3;
+    let listTitles = DEFAULT_LIST_TITLES;
+    let todos = DEFAULT_TODOS;
+    let memos = DEFAULT_MEMOS;
 
     let activeTab = 'todo';
     let searchQuery = '';
     let filterCategory = 'all';
 
-    // --- 데이터를 로컬 스토리지에 실시간 보관하는 도우미 함수 ---
-    function saveToLocalStorage() {
+    // --- 클라우드와 로컬 저장소 동시 보존 로직 (Rule 1 준수) ---
+    async function saveToCloudAndLocal() {
+      // 로컬 스토리지 보존
       localStorage.setItem('sw_categories', JSON.stringify(categories));
       localStorage.setItem('sw_columnCount', columnCount);
       localStorage.setItem('sw_listTitles', JSON.stringify(listTitles));
       localStorage.setItem('sw_todos', JSON.stringify(todos));
       localStorage.setItem('sw_memos', JSON.stringify(memos));
+
+      // 클라우드 데이터 서버 실시간 동기화 전송 (Rule 1에 맞는 엄격한 경로 설정)
+      if (currentAuthUser) {
+        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'workspaces', workspaceId);
+        try {
+          await setDoc(docRef, {
+            categories,
+            columnCount,
+            listTitles,
+            todos,
+            memos,
+            lastUpdatedBy: currentAuthUser.uid,
+            timestamp: Date.now()
+          }, { merge: true });
+        } catch (e) {
+          console.error("클라우드 저장 실패: ", e);
+        }
+      }
     }
 
-    // --- 유틸리티 함수: 알림 제공 ---
-    function showAlert(message, type = 'success') {
+    // --- 스마트폰 연동 워크스페이스 교체기 ---
+    window.connectToWorkspace = function() {
+      const targetInput = document.getElementById('target-ws-code');
+      const targetCode = targetInput.value.trim().toUpperCase();
+      if (!targetCode) {
+        showAlert('동기화 코드를 정확히 입력하세요.', 'error');
+        return;
+      }
+
+      // 새 주소로 브라우저 리로드 (동기화 쿼리 전송)
+      const newUrl = window.location.origin + window.location.pathname + '?ws=' + targetCode;
+      window.location.href = newUrl;
+    };
+
+    // --- 기기 간 간편 공유 링크 클립보드 복사 ---
+    window.copyShareLink = function() {
+      const shareUrl = window.location.origin + window.location.pathname + '?ws=' + workspaceId;
+      
+      // Iframe 제약 방지 브라우저 전통 복사 로직 적용
+      const tempInput = document.createElement("input");
+      tempInput.value = shareUrl;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      document.execCommand("copy");
+      document.body.removeChild(tempInput);
+
+      showAlert('모바일 연동용 공유 링크가 클립보드에 복사되었습니다! 휴대폰에 전송하세요.', 'success');
+    };
+
+    // --- 알림 제공 창 ---
+    window.showAlert = function(message, type = 'success') {
       const alertContainer = document.getElementById('alert-container');
       const alertId = `alert-${Date.now()}`;
       
@@ -374,12 +497,54 @@
         const target = document.getElementById(alertId);
         if (target) target.remove();
       }, 2500);
+    };
+
+    // --- 클라우드 실시간 데이터 수신 리스너 (Rule 3 준수) ---
+    function setupCloudSyncListener() {
+      if (!currentAuthUser) return;
+
+      const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'workspaces', workspaceId);
+
+      // 클라우드 문서 실시간 감시 시작
+      unsubscribeSync = onSnapshot(docRef, (docSnap) => {
+        if (docSnap.exists()) {
+          const cloudData = docSnap.data();
+          
+          // 클라우드 데이터 수신 및 로컬 메모리 상태 교체
+          if (cloudData.categories) categories = cloudData.categories;
+          if (cloudData.columnCount) columnCount = cloudData.columnCount;
+          if (cloudData.listTitles) listTitles = cloudData.listTitles;
+          if (cloudData.todos) todos = cloudData.todos;
+          if (cloudData.memos) memos = cloudData.memos;
+
+          render();
+        } else {
+          // 데이터가 생성 전인 신규 동기화 영역일 경우 최초 1회 빈 상태로 초기 저장 진행
+          saveToCloudAndLocal();
+        }
+      }, (error) => {
+        console.error("클라우드 연동 에러: ", error);
+        showAlert("데이터 수신 오류가 발생해 로컬에서 작동 중입니다.", "error");
+      });
     }
 
+    // --- Firebase 인증 처리 (Rule 3 최우선 가치 준수) ---
+    const initAuth = async () => {
+      try {
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+          await signInWithCustomToken(auth, __initial_auth_token);
+        } else {
+          await signInAnonymously(auth);
+        }
+      } catch (err) {
+        console.error("클라우드 인증 실패: ", err);
+      }
+    };
+
     // --- 열 개수 변경 핸들러 ---
-    function changeColumnCount(count) {
+    window.changeColumnCount = function(count) {
       columnCount = count;
-      saveToLocalStorage(); // 저장
+      saveToCloudAndLocal();
       
       // 상단 선택 버튼 UI 업데이트
       [3, 4, 5].forEach(c => {
@@ -393,10 +558,10 @@
 
       showAlert(`대시보드 레이아웃이 ${count}열 구조로 재편되었습니다.`, 'info');
       render();
-    }
+    };
 
     // --- 상단 헤더 탭 전환 핸들러 ---
-    function switchTab(tabId) {
+    window.switchTab = function(tabId) {
       activeTab = tabId;
       
       const tabs = ['todo', 'memo', 'categories'];
@@ -424,11 +589,10 @@
       }
 
       render();
-    }
+    };
 
     // --- 업무 진척 비율 업데이트 ---
     function updateProgress() {
-      // 현재 화면에 표시된 활성 열에 속한 투두들만 기준으로 진척 계산
       const activeTodos = todos.filter(t => t.listId <= columnCount);
       const total = activeTodos.length;
       const completed = activeTodos.filter(t => t.completed).length;
@@ -439,12 +603,12 @@
     }
 
     // --- 1. 투두 리스트 비즈니스 로직 ---
-    function handleTitleChange(listId, newTitle) {
+    window.handleTitleChange = function(listId, newTitle) {
       listTitles[listId] = newTitle;
-      saveToLocalStorage(); // 저장
-    }
+      saveToCloudAndLocal();
+    };
 
-    function handleAddTodo(listId, event) {
+    window.handleAddTodo = function(listId, event) {
       event.preventDefault();
       const inputEl = document.getElementById(`todo-input-${listId}`);
       const text = inputEl.value.trim();
@@ -467,12 +631,13 @@
 
       todos.push(newTodo);
       inputEl.value = '';
-      saveToLocalStorage(); // 저장
+      saveToLocalStorage();
+      saveToCloudAndLocal();
       showAlert('업무가 등록되었습니다.');
       render();
-    }
+    };
 
-    function handleToggleComplete(todoId) {
+    window.handleToggleComplete = function(todoId) {
       todos = todos.map(t => {
         if (t.id === todoId) {
           const nextState = !t.completed;
@@ -485,42 +650,41 @@
         }
         return t;
       });
-      saveToLocalStorage(); // 저장
+      saveToCloudAndLocal();
       render();
-    }
+    };
 
-    // 투두 중요 표시 (별표시) 토글
-    function handleToggleStar(todoId) {
+    window.handleToggleStar = function(todoId) {
       todos = todos.map(t => t.id === todoId ? { ...t, starred: !t.starred } : t);
-      saveToLocalStorage(); // 저장
+      saveToCloudAndLocal();
       render();
-    }
+    };
 
-    function handleDeleteTodo(todoId) {
+    window.handleDeleteTodo = function(todoId) {
       todos = todos.filter(t => t.id !== todoId);
-      saveToLocalStorage(); // 저장
+      saveToCloudAndLocal();
       showAlert('업무가 삭제되었습니다.', 'info');
       render();
-    }
+    };
 
-    function handleDirectStatus(todoId, targetListId) {
+    window.handleDirectStatus = function(todoId, targetListId) {
       todos = todos.map(t => t.id === todoId ? { ...t, listId: targetListId } : t);
-      saveToLocalStorage(); // 저장
+      saveToCloudAndLocal();
       render();
-    }
+    };
 
     // --- 2. 메모장 비즈니스 로직 ---
-    function handleMemoSearch(val) {
+    window.handleMemoSearch = function(val) {
       searchQuery = val;
       renderMemos();
-    }
+    };
 
-    function handleMemoCategoryFilter(val) {
+    window.handleMemoCategoryFilter = function(val) {
       filterCategory = val;
       renderMemos();
-    }
+    };
 
-    function handleSaveMemo(e) {
+    window.handleSaveMemo = function(e) {
       e.preventDefault();
       const titleInput = document.getElementById('memo-title-input');
       const contentInput = document.getElementById('memo-content-input');
@@ -538,7 +702,6 @@
       }
 
       if (editId) {
-        // 수정 모드
         memos = memos.map(m => m.id === editId ? {
           ...m,
           title,
@@ -549,7 +712,6 @@
         showAlert('메모가 수정되었습니다.');
         cancelMemoEdit();
       } else {
-        // 추가 모드
         const newMemo = {
           id: `memo-${Date.now()}`,
           title,
@@ -563,12 +725,11 @@
 
       titleInput.value = '';
       contentInput.value = '';
-      saveToLocalStorage(); // 저장
+      saveToCloudAndLocal();
       render();
-    }
+    };
 
-    // 메모 편집 모드 돌입
-    function handleEditMemoStart(id) {
+    window.handleEditMemoStart = function(id) {
       const memo = memos.find(m => m.id === id);
       if (!memo) return;
 
@@ -582,26 +743,26 @@
       document.getElementById('memo-cancel-btn').classList.remove('hidden');
 
       document.getElementById('memo-form').scrollIntoView({ behavior: 'smooth' });
-    }
+    };
 
-    function cancelMemoEdit() {
+    window.cancelMemoEdit = function() {
       document.getElementById('editing-memo-id').value = '';
       document.getElementById('memo-title-input').value = '';
       document.getElementById('memo-content-input').value = '';
       document.getElementById('memo-form-title').innerText = '새로운 업무 업무 메모 등록';
       document.getElementById('memo-submit-btn').innerText = '메모장에 등록하기';
       document.getElementById('memo-cancel-btn').classList.add('hidden');
-    }
+    };
 
-    function handleDeleteMemo(id) {
+    window.handleDeleteMemo = function(id) {
       memos = memos.filter(m => m.id !== id);
-      saveToLocalStorage(); // 저장
+      saveToCloudAndLocal();
       showAlert('메모가 삭제되었습니다.', 'info');
       render();
-    }
+    };
 
     // --- 3. 카테고리 비즈니스 로직 ---
-    function handleAddCategory(e) {
+    window.handleAddCategory = function(e) {
       e.preventDefault();
       const nameInput = document.getElementById('new-cat-name');
       const colorInput = document.getElementById('new-cat-color');
@@ -618,12 +779,12 @@
 
       categories.push(newCat);
       nameInput.value = '';
-      saveToLocalStorage(); // 저장
+      saveToCloudAndLocal();
       showAlert('업무 분야가 추가되었습니다.');
       render();
-    }
+    };
 
-    function handleDeleteCategory(catId) {
+    window.handleDeleteCategory = function(catId) {
       if (categories.length <= 1) {
         showAlert('최소 1개의 분야는 보존해야 합니다.', 'error');
         return;
@@ -633,11 +794,10 @@
       memos = memos.map(m => m.categoryId === catId ? { ...m, categoryId: fallbackId } : m);
       categories = categories.filter(c => c.id !== catId);
       
-      saveToLocalStorage(); // 저장
+      saveToCloudAndLocal();
       showAlert('분야가 삭제되었으며, 기존 메모는 다른 분야로 이전되었습니다.', 'info');
       render();
-    }
-
+    };
 
     // --- 통합 화면 렌더링 엔진 ---
     function render() {
@@ -659,7 +819,6 @@
       const grid = document.getElementById('todo-columns-grid');
       let html = '';
 
-      // 선택한 columnCount에 대응해 그리드 클래스를 반응형으로 동적 재배치
       if (columnCount === 3) {
         grid.className = "grid grid-cols-1 md:grid-cols-3 gap-6 items-start";
       } else if (columnCount === 4) {
@@ -668,11 +827,8 @@
         grid.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-start";
       }
 
-      // 동적 루프 실행 (선택된 열 수만큼 반복)
       for (let listId = 1; listId <= columnCount; listId++) {
         const listTodos = todos.filter(t => t.listId === listId);
-        
-        // 정렬 조건: 미완료가 위로, 완료된 것은 하단 배치
         const sortedTodos = [...listTodos].sort((a, b) => Number(a.completed) - Number(b.completed));
         const count = listTodos.length;
         const isLimitReached = count >= 10;
@@ -693,7 +849,6 @@
             const textStyle = todo.completed ? 'font-bold text-slate-400 line-through' : 'text-slate-700 font-medium';
             const cardBg = todo.completed ? 'bg-slate-50 border-slate-200 shadow-none' : 'bg-white border-slate-200 hover:border-slate-300 shadow-sm';
 
-            // 선택한 전체 열 개수(columnCount)에 맞춰 동적으로 퀵 이동 단추 생성
             let moveButtonsHTML = '';
             for (let i = 1; i <= columnCount; i++) {
               if (i !== listId) {
@@ -710,51 +865,36 @@
 
             cardsHTML += `
               <div class="p-3.5 rounded-xl border transition-all relative group ${cardBg}">
-                <!-- 상단 작은 제어 액션 영역 (체크표시, 별표시, 삭제표시) -->
                 <div class="flex items-center justify-between pb-2 mb-2 border-b border-dashed border-slate-100">
                   <div class="flex items-center space-x-2">
-                    <!-- 체크표시 버튼 -->
                     <button
                       type="button"
                       onclick="handleToggleComplete('${todo.id}')"
                       class="p-0.5 rounded transition-all ${checkColor}"
-                      title="${todo.completed ? '진행 중으로 변경' : '완료 처리'}"
                     >
                       <i data-lucide="${checkIcon}" class="w-4 h-4"></i>
                     </button>
-
-                    <!-- 별표시 (중요도) 버튼 -->
                     <button
                       type="button"
                       onclick="handleToggleStar('${todo.id}')"
                       class="p-0.5 rounded transition-colors ${starClass}"
-                      title="중요 표시"
                     >
                       <i data-lucide="star" class="w-4 h-4"></i>
                     </button>
                   </div>
-
-                  <!-- 삭제표시 버튼 (완료 시 미노출) -->
                   ${!todo.completed ? `
                     <button
                       type="button"
                       onclick="handleDeleteTodo('${todo.id}')"
                       class="p-0.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
-                      title="할 일 삭제"
                     >
                       <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                     </button>
                   ` : ''}
                 </div>
-
-                <!-- 할 일 텍스트 내용 -->
                 <div class="text-xs leading-relaxed break-all">
-                  <span class="${textStyle}">
-                    ${todo.text}
-                  </span>
+                  <span class="${textStyle}">${todo.text}</span>
                 </div>
-
-                <!-- 퀵 이동 패널 (컬럼 전환 단추) -->
                 <div class="mt-2.5 pt-2 border-t border-slate-100 flex flex-wrap gap-1 justify-end">
                   ${moveButtonsHTML}
                 </div>
@@ -765,7 +905,6 @@
 
         html += `
           <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow flex flex-col min-h-[580px] bg-gradient-to-b from-white to-slate-50/20">
-            <!-- 1. 업무 제목 입력 영역 -->
             <div class="mb-4 pb-3 border-b border-slate-100 flex items-center justify-between gap-1">
               <div class="flex-1">
                 <input
@@ -780,30 +919,25 @@
                 ${count}/10
               </span>
             </div>
-
-            <!-- 2. 신규 할 일 입력 폼 -->
             <form onsubmit="handleAddTodo(${listId}, event)" class="mb-4 flex items-center gap-1.5">
               <input
                 type="text"
                 id="todo-input-${listId}"
                 ${isLimitReached ? 'disabled' : ''}
                 placeholder="${isLimitReached ? '한계 도달 (10개)' : '할 일 추가 후 엔터'}"
-                class="flex-1 text-[11px] border border-slate-200 bg-white rounded-xl px-2.5 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:bg-slate-100 disabled:cursor-not-allowed disabled:placeholder-slate-400"
+                class="flex-1 text-[11px] border border-slate-200 bg-white rounded-xl px-2.5 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:bg-slate-100 disabled:cursor-not-allowed"
               />
               <button
                 type="submit"
                 ${isLimitReached ? 'disabled' : ''}
-                class="p-2 bg-slate-900 hover:bg-slate-800 disabled:bg-slate-200 text-white disabled:text-slate-400 rounded-xl transition-colors"
+                class="p-2 bg-slate-900 hover:bg-slate-800 disabled:bg-slate-200 text-white rounded-xl transition-colors"
               >
                 <i data-lucide="plus" class="w-3.5 h-3.5"></i>
               </button>
             </form>
-
-            <!-- 3. 투두 수직 목록 박스 -->
             <div class="flex-1 space-y-2.5 overflow-y-auto max-h-[420px] pr-1">
               ${cardsHTML}
             </div>
-
             <div class="mt-4 pt-3 border-t border-slate-100 text-center">
               <span class="text-[9px] text-slate-400 font-medium">
                 ${count === 10 ? "⚠️ 추가 제한" : "자동 정렬 시스템 적용됨"}
@@ -869,26 +1003,21 @@
                     ${new Date(memo.updatedAt).toLocaleDateString()}
                   </span>
                 </div>
-                
                 <h5 class="font-extrabold text-slate-900 text-sm">${memo.title}</h5>
                 <p class="text-xs text-slate-500 whitespace-pre-wrap leading-relaxed line-clamp-4">
                   ${memo.content}
                 </p>
               </div>
-
-              <!-- 제어 패널 -->
               <div class="flex items-center justify-end space-x-1 pt-3 border-t border-slate-100">
                 <button
                   onclick="handleEditMemoStart('${memo.id}')"
                   class="p-1.5 text-slate-400 hover:text-indigo-600 rounded-lg hover:bg-indigo-50 transition-colors"
-                  title="메모 수정"
                 >
                   <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
                 </button>
                 <button
                   onclick="handleDeleteMemo('${memo.id}')"
                   class="p-1.5 text-slate-400 hover:text-red-500 rounded-lg hover:bg-red-50 transition-colors"
-                  title="메모 삭제"
                 >
                   <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                 </button>
@@ -919,11 +1048,9 @@
                 <div class="text-[10px] text-slate-400 mt-0.5">보관 중인 메모 ${memoCount}개 연결됨</div>
               </div>
             </div>
-
             <button
               onclick="handleDeleteCategory('${cat.id}')"
               class="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-              title="카테고리 삭제"
             >
               <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
             </button>
@@ -939,11 +1066,29 @@
       document.getElementById('new-cat-color-text').innerText = e.target.value;
     });
 
-    // --- 앱 최초 실행 및 렌더링 ---
+    // --- 앱 구동 및 클라우드 연동 (Rule 3 준수) ---
+    const startApp = async () => {
+      // 상단 워크스페이스 동기화 코드 표기
+      document.getElementById('current-ws-code').innerText = workspaceId;
+
+      // 1단계: 인증 처리 실행
+      await initAuth();
+
+      // 2단계: 인증된 사용자 기억
+      onAuthStateChanged(auth, (user) => {
+        currentAuthUser = user;
+        if (user) {
+          // 3단계: 실시간 데이터베이스 연동 리스너 시작
+          setupCloudSyncListener();
+        }
+      });
+    };
+
     window.addEventListener('DOMContentLoaded', () => {
-      // 로드할 때 세팅된 초기 열 개수에 따른 버튼 활성화 UI 복원
-      changeColumnCount(columnCount);
+      startApp();
     });
   </script>
 </body>
 </html>
+
+```
