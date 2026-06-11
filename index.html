@@ -29,7 +29,7 @@
         </div>
         <div>
           <h1 class="text-lg font-extrabold text-slate-900 tracking-tight">Smart WorkSpace</h1>
-          <p class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">메모 & 3열 투두 스마트 대시보드</p>
+          <p class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">메모 & 멀티 투두 스마트 대시보드</p>
         </div>
       </div>
 
@@ -37,7 +37,7 @@
       <div class="flex bg-slate-100 p-1 rounded-xl">
         <button id="tab-todo" onclick="switchTab('todo')" class="px-4 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center space-x-1.5 bg-white text-indigo-600 shadow-sm">
           <i data-lucide="check-square" class="w-3.5 h-3.5"></i>
-          <span>3열 투두리스트</span>
+          <span>투두리스트</span>
         </button>
         <button id="tab-memo" onclick="switchTab('memo')" class="px-4 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center space-x-1.5 text-slate-600 hover:text-slate-900">
           <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
@@ -73,14 +73,33 @@
       </div>
     </div>
 
-    <!-- 1. 핵심 3열 투두리스트 탭 패널 -->
+    <!-- 1. 핵심 투두리스트 탭 패널 -->
     <section id="panel-todo" class="space-y-6">
       
+      <!-- 레이아웃 조절 상자 (3열, 4열, 5열 선택기) -->
+      <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="flex items-center space-x-2.5">
+          <div class="bg-indigo-50 p-1.5 rounded-lg text-indigo-600">
+            <i data-lucide="layout" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h4 class="text-xs font-bold text-slate-700">대시보드 레이아웃 조절</h4>
+            <p class="text-[10px] text-slate-400 font-medium">원하는 개수의 업무 목록 열을 유동적으로 배치하세요</p>
+          </div>
+        </div>
+        
+        <div class="flex items-center space-x-1 bg-slate-100 p-1 rounded-xl self-start sm:self-auto">
+          <button id="btn-col-3" onclick="changeColumnCount(3)" class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all bg-white text-indigo-600 shadow-sm">3열로 보기</button>
+          <button id="btn-col-4" onclick="changeColumnCount(4)" class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all text-slate-600 hover:text-slate-900">4열로 보기</button>
+          <button id="btn-col-5" onclick="changeColumnCount(5)" class="px-3 py-1.5 text-xs font-bold rounded-lg transition-all text-slate-600 hover:text-slate-900">5열로 보기</button>
+        </div>
+      </div>
+
       <!-- 가이드 안내 카드 -->
       <div class="bg-indigo-900 text-white p-4 rounded-2xl shadow-md flex items-center justify-between">
         <div class="space-y-1">
           <h3 class="text-sm font-bold flex items-center space-x-1.5">
-            <span>🚀 3열 인텔리전트 업무 대시보드 가이드</span>
+            <span>🚀 인텔리전트 업무 대시보드 가이드</span>
           </h3>
           <p class="text-xs text-indigo-200">
             각 열의 제목을 클릭하여 직접 수정할 수 있습니다. 각 리스트당 최대 10개까지 추가 가능하며, 체크하면 즉시 하단으로 정렬되고 글자가 굵어지며 삭제 버튼이 감춰집니다!
@@ -91,9 +110,9 @@
         </span>
       </div>
 
-      <!-- 메인 가로 3개 배치 투두 리스트 그리드 -->
+      <!-- 메인 가로 배치 투두 리스트 그리드 (선택된 열 개수에 맞춰 클래스가 업데이트됩니다.) -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-start" id="todo-columns-grid">
-        <!-- JS를 통해 3개의 컬럼이 렌더링됩니다. -->
+        <!-- JS를 통해 설정한 열 수만큼 컬럼이 렌더링됩니다. -->
       </div>
     </section>
 
@@ -120,7 +139,7 @@
           </div>
           
           <div class="flex items-center justify-between text-xs">
-            <span class="font-semibold text-slate-500">분야별 필터</span>
+            <span class="font-semibold text-slate-500">分野별 필터</span>
             <select
               id="memo-filter-category"
               onchange="handleMemoCategoryFilter(this.value)"
@@ -284,10 +303,16 @@
       { id: 'cat-4', name: '마케팅 & 영업', color: '#F59E0B' },
     ];
 
+    // 현재 사용자 화면에 표출할 열 개수 상태값 (3, 4, 5 선택 가능)
+    let columnCount = 3;
+
+    // 최대 5열까지의 프로젝트 타이틀 대응
     let listTitles = {
       1: '🔥 긴급 업무 및 프로젝트',
       2: '📅 데일리 체크리스트',
-      3: '💡 아이디어 및 장기 검토'
+      3: '💡 아이디어 및 장기 검토',
+      4: '🚀 추가 프로젝트 A',
+      5: '🛠 추가 프로젝트 B'
     };
 
     let todos = [
@@ -295,7 +320,9 @@
       { id: 't-2', text: '주간 부서 간담회 자료 취합', completed: true, starred: false, listId: 1, createdAt: Date.now() + 1 },
       { id: 't-3', text: '메인 API 성능 최적화 테스트 진행', completed: false, starred: true, listId: 2, createdAt: Date.now() + 2 },
       { id: 't-4', text: '일일 스크럼 참여 및 이슈 브리핑', completed: false, starred: false, listId: 2, createdAt: Date.now() + 3 },
-      { id: 't-5', text: '해외 벤치마킹 디자인 사례 분석', completed: false, starred: false, listId: 3, createdAt: Date.now() + 4 }
+      { id: 't-5', text: '해외 벤치마킹 디자인 사례 분석', completed: false, starred: false, listId: 3, createdAt: Date.now() + 4 },
+      { id: 't-6', text: '기획안 신규 아이콘 에셋 확보', completed: false, starred: false, listId: 4, createdAt: Date.now() + 5 },
+      { id: 't-7', text: '기존 시스템 레거시 코드 정리', completed: true, starred: false, listId: 5, createdAt: Date.now() + 6 }
     ];
 
     let memos = [
@@ -346,6 +373,24 @@
       }, 2500);
     }
 
+    // --- 열 개수 변경 핸들러 ---
+    function changeColumnCount(count) {
+      columnCount = count;
+      
+      // 상단 선택 버튼 UI 업데이트
+      [3, 4, 5].forEach(c => {
+        const btn = document.getElementById(`btn-col-${c}`);
+        if (c === count) {
+          btn.className = "px-3 py-1.5 text-xs font-bold rounded-lg transition-all bg-white text-indigo-600 shadow-sm";
+        } else {
+          btn.className = "px-3 py-1.5 text-xs font-bold rounded-lg transition-all text-slate-600 hover:text-slate-900";
+        }
+      });
+
+      showAlert(`대시보드 레이아웃이 ${count}열 구조로 재편되었습니다.`, 'info');
+      render();
+    }
+
     // --- 상단 헤더 탭 전환 핸들러 ---
     function switchTab(tabId) {
       activeTab = tabId;
@@ -369,8 +414,10 @@
 
     // --- 업무 진척 비율 업데이트 ---
     function updateProgress() {
-      const total = todos.length;
-      const completed = todos.filter(t => t.completed).length;
+      // 현재 화면에 표시된 활성 열에 속한 투두들만 기준으로 진척 계산
+      const activeTodos = todos.filter(t => t.listId <= columnCount);
+      const total = activeTodos.length;
+      const completed = activeTodos.filter(t => t.completed).length;
       const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
 
       document.getElementById('progress-text').innerText = `전체 ${total}개 중 ${completed}개 완료 (${percent}%)`;
@@ -498,6 +545,7 @@
       render();
     }
 
+    // 메모 편집 모드 돌입
     function handleEditMemoStart(id) {
       const memo = memos.find(m => m.id === id);
       if (!memo) return;
@@ -511,7 +559,6 @@
       document.getElementById('memo-submit-btn').innerText = '수정 내용 업데이트';
       document.getElementById('memo-cancel-btn').classList.remove('hidden');
 
-      // 메모 등록 폼으로 시선 이동을 위해 부드러운 스크롤
       document.getElementById('memo-form').scrollIntoView({ behavior: 'smooth' });
     }
 
@@ -559,7 +606,6 @@
       }
 
       const fallbackId = categories.find(c => c.id !== catId).id;
-      // 기존에 매칭된 메모들은 폴백 카테고리로 이전
       memos = memos.map(m => m.categoryId === catId ? { ...m, categoryId: fallbackId } : m);
       categories = categories.filter(c => c.id !== catId);
       
@@ -580,7 +626,6 @@
         renderCategories();
       }
 
-      // Lucide 아이콘 동적 변환 실행
       lucide.createIcons();
     }
 
@@ -589,10 +634,20 @@
       const grid = document.getElementById('todo-columns-grid');
       let html = '';
 
-      [1, 2, 3].forEach(listId => {
+      // 선택한 columnCount에 대응해 그리드 클래스를 반응형으로 동적 재배치
+      if (columnCount === 3) {
+        grid.className = "grid grid-cols-1 md:grid-cols-3 gap-6 items-start";
+      } else if (columnCount === 4) {
+        grid.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-start";
+      } else {
+        grid.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-start";
+      }
+
+      // 동적 루프 실행 (선택된 열 수만큼 반복)
+      for (let listId = 1; listId <= columnCount; listId++) {
         const listTodos = todos.filter(t => t.listId === listId);
         
-        // 정렬 조건: 체크(완료) 안된게(false) 먼저 위로, 완료된것(true)은 하단으로 내리기
+        // 정렬 조건: 미완료가 위로, 완료된 것은 하단 배치
         const sortedTodos = [...listTodos].sort((a, b) => Number(a.completed) - Number(b.completed));
         const count = listTodos.length;
         const isLimitReached = count >= 10;
@@ -600,8 +655,8 @@
         let cardsHTML = '';
         if (sortedTodos.length === 0) {
           cardsHTML = `
-            <div class="text-center py-24 text-slate-300 text-xs flex flex-col items-center justify-center space-y-2">
-              <i data-lucide="check-square" class="w-12 h-12 text-slate-200 stroke-1"></i>
+            <div class="text-center py-20 text-slate-300 text-xs flex flex-col items-center justify-center space-y-2">
+              <i data-lucide="check-square" class="w-10 h-10 text-slate-200 stroke-1"></i>
               <span>등록된 할 일이 없습니다.</span>
             </div>
           `;
@@ -612,6 +667,21 @@
             const checkColor = todo.completed ? 'text-indigo-600 bg-indigo-50' : 'text-slate-400 hover:text-indigo-600 hover:bg-slate-50';
             const textStyle = todo.completed ? 'font-bold text-slate-400 line-through' : 'text-slate-700 font-medium';
             const cardBg = todo.completed ? 'bg-slate-50 border-slate-200 shadow-none' : 'bg-white border-slate-200 hover:border-slate-300 shadow-sm';
+
+            // 선택한 전체 열 개수(columnCount)에 맞춰 동적으로 퀵 이동 단추 생성
+            let moveButtonsHTML = '';
+            for (let i = 1; i <= columnCount; i++) {
+              if (i !== listId) {
+                moveButtonsHTML += `
+                  <button 
+                    onclick="handleDirectStatus('${todo.id}', ${i})" 
+                    class="px-1 py-0.5 bg-slate-50 hover:bg-slate-100 text-slate-500 text-[8px] font-semibold rounded border border-slate-200"
+                    title="${i}열로 즉시 이동"
+                  >
+                    ${i}열
+                  </button>`;
+              }
+            }
 
             cardsHTML += `
               <div class="p-3.5 rounded-xl border transition-all relative group ${cardBg}">
@@ -660,10 +730,8 @@
                 </div>
 
                 <!-- 퀵 이동 패널 (컬럼 전환 단추) -->
-                <div class="mt-2.5 pt-2 border-t border-slate-50 flex justify-end gap-1">
-                  ${listId !== 1 ? `<button onclick="handleDirectStatus('${todo.id}', 1)" class="px-1 py-0.5 bg-slate-50 hover:bg-slate-100 text-slate-500 text-[9px] font-semibold rounded">1열</button>` : ''}
-                  ${listId !== 2 ? `<button onclick="handleDirectStatus('${todo.id}', 2)" class="px-1 py-0.5 bg-slate-50 hover:bg-slate-100 text-slate-500 text-[9px] font-semibold rounded">2열</button>` : ''}
-                  ${listId !== 3 ? `<button onclick="handleDirectStatus('${todo.id}', 3)" class="px-1 py-0.5 bg-slate-50 hover:bg-slate-100 text-slate-500 text-[9px] font-semibold rounded">3열</button>` : ''}
+                <div class="mt-2.5 pt-2 border-t border-slate-100 flex flex-wrap gap-1 justify-end">
+                  ${moveButtonsHTML}
                 </div>
               </div>
             `;
@@ -671,19 +739,19 @@
         }
 
         html += `
-          <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col min-h-[620px] bg-gradient-to-b from-white to-slate-50/20">
+          <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow flex flex-col min-h-[580px] bg-gradient-to-b from-white to-slate-50/20">
             <!-- 1. 업무 제목 입력 영역 -->
-            <div class="mb-4 pb-3 border-b border-slate-100 flex items-center justify-between gap-2">
+            <div class="mb-4 pb-3 border-b border-slate-100 flex items-center justify-between gap-1">
               <div class="flex-1">
                 <input
                   type="text"
-                  value="${listTitles[listId]}"
+                  value="${listTitles[listId] || '업무 목록 ' + listId}"
                   oninput="handleTitleChange(${listId}, this.value)"
-                  placeholder="업무 제목을 입력해 주세요"
-                  class="w-full text-base font-extrabold text-slate-800 bg-transparent hover:bg-slate-100 focus:bg-white focus:ring-1 focus:ring-indigo-300 px-1.5 py-1 rounded-lg transition-all focus:outline-none placeholder-slate-400"
+                  placeholder="업무 제목 입력"
+                  class="w-full text-sm font-extrabold text-slate-800 bg-transparent hover:bg-slate-100 focus:bg-white focus:ring-1 focus:ring-indigo-300 px-1.5 py-1 rounded-lg transition-all focus:outline-none placeholder-slate-400"
                 />
               </div>
-              <span class="text-[11px] font-black px-2 py-0.5 rounded-full ${isLimitReached ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-600'}">
+              <span class="text-[10px] font-black px-1.5 py-0.5 rounded-full ${isLimitReached ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-600'}">
                 ${count}/10
               </span>
             </div>
@@ -694,38 +762,37 @@
                 type="text"
                 id="todo-input-${listId}"
                 ${isLimitReached ? 'disabled' : ''}
-                placeholder="${isLimitReached ? '10개 등록이 완료되었습니다.' : '할 일 추가 후 엔터'}"
-                class="flex-1 text-xs border border-slate-200 bg-white rounded-xl px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:bg-slate-100 disabled:cursor-not-allowed disabled:placeholder-slate-400"
+                placeholder="${isLimitReached ? '한계 도달 (10개)' : '할 일 추가 후 엔터'}"
+                class="flex-1 text-[11px] border border-slate-200 bg-white rounded-xl px-2.5 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:bg-slate-100 disabled:cursor-not-allowed disabled:placeholder-slate-400"
               />
               <button
                 type="submit"
                 ${isLimitReached ? 'disabled' : ''}
                 class="p-2 bg-slate-900 hover:bg-slate-800 disabled:bg-slate-200 text-white disabled:text-slate-400 rounded-xl transition-colors"
               >
-                <i data-lucide="plus" class="w-4 h-4"></i>
+                <i data-lucide="plus" class="w-3.5 h-3.5"></i>
               </button>
             </form>
 
             <!-- 3. 투두 수직 목록 박스 -->
-            <div class="flex-1 space-y-2.5 overflow-y-auto max-h-[480px] pr-1">
+            <div class="flex-1 space-y-2.5 overflow-y-auto max-h-[420px] pr-1">
               ${cardsHTML}
             </div>
 
             <div class="mt-4 pt-3 border-t border-slate-100 text-center">
-              <span class="text-[10px] text-slate-400 font-medium">
-                ${count === 10 ? "⚠️ 추가가 제한되었습니다" : "기록 및 자동 정렬 시스템 가동 중"}
+              <span class="text-[9px] text-slate-400 font-medium">
+                ${count === 10 ? "⚠️ 추가 제한" : "자동 정렬 시스템 적용됨"}
               </span>
             </div>
           </div>
         `;
-      });
+      }
 
       grid.innerHTML = html;
     }
 
     // 메모장 탭 렌더러
     function renderMemos() {
-      // 폼 옵션 바인딩
       const catSelect = document.getElementById('memo-category-select');
       let selectHTML = '';
       categories.forEach(cat => {
@@ -733,7 +800,6 @@
       });
       catSelect.innerHTML = selectHTML;
 
-      // 필터 옵션 바인딩 (전체보기 제외한 나머지 동적 확보)
       const filterSelect = document.getElementById('memo-filter-category');
       let filterHTML = '<option value="all">전체 분야 보기</option>';
       categories.forEach(cat => {
@@ -742,7 +808,6 @@
       });
       filterSelect.innerHTML = filterHTML;
 
-      // 필터링된 데이터 연산
       const filteredMemos = memos.filter(m => {
         const matchesSearch = m.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                               m.content.toLowerCase().includes(searchQuery.toLowerCase());
@@ -813,7 +878,6 @@
 
     // 카테고리 탭 렌더러
     function renderCategories() {
-      // 헤더 라벨
       document.getElementById('categories-count-label').innerText = `현재 운영 중인 업무 분야 (${categories.length})`;
 
       const grid = document.getElementById('categories-list-grid');
