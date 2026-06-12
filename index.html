@@ -18,8 +18,9 @@
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-800 flex flex-col font-sans">
 
+  <!-- 글로벌 상단 헤더 -->
   <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+    <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
       <div class="flex items-center space-x-3">
         <div class="bg-indigo-600 p-2 rounded-xl text-white shadow-md shadow-indigo-100">
           <i data-lucide="layers" class="w-5 h-5"></i>
@@ -30,6 +31,7 @@
         </div>
       </div>
 
+      <!-- 통합 탭 네비게이션 -->
       <div class="flex bg-slate-100 p-1 rounded-xl">
         <button id="tab-todo" onclick="switchTab('todo')" class="px-4 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center space-x-1.5 bg-white text-indigo-600 shadow-sm">
           <i data-lucide="check-square" class="w-3.5 h-3.5"></i>
@@ -47,11 +49,55 @@
     </div>
   </header>
 
+  <!-- 스마트 알림창 컨테이너 -->
   <div id="alert-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
-  <div class="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 space-y-4">
+  <!-- 메인 레이아웃 본문 -->
+  <div class="flex-1 max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 space-y-4">
     
-    <div class="bg-gradient-to-r from-slate-900 to-indigo-950 text-white p-4 rounded-2xl shadow-md flex flex-col lg:flex-row items-center justify-between gap-4">
+    <!-- 🌟 통합 컨트롤 버튼 한 줄 정리 바 -->
+    <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+        <!-- 모바일 연동 토글 버튼 -->
+        <button 
+          id="btn-toggle-sync" 
+          onclick="togglePanel('sync')" 
+          class="px-3.5 py-2 text-xs font-bold rounded-xl border border-slate-200 hover:bg-slate-50 transition-all flex items-center space-x-1.5 text-slate-700 bg-white"
+        >
+          <i data-lucide="smartphone" class="w-4 h-4 text-indigo-500"></i>
+          <span>📱 모바일 연동</span>
+        </button>
+
+        <!-- 진행률 & 설정 토글 버튼 -->
+        <button 
+          id="btn-toggle-progress" 
+          onclick="togglePanel('progress')" 
+          class="px-3.5 py-2 text-xs font-bold rounded-xl border border-slate-200 hover:bg-slate-50 transition-all flex items-center space-x-1.5 text-slate-700 bg-white"
+        >
+          <i data-lucide="bar-chart-2" class="w-4 h-4 text-indigo-500"></i>
+          <span>📊 진행률 & 설정</span>
+        </button>
+
+        <!-- 사용 가이드 토글 버튼 -->
+        <button 
+          id="btn-toggle-guide" 
+          onclick="togglePanel('guide')" 
+          class="px-3.5 py-2 text-xs font-bold rounded-xl border border-slate-200 hover:bg-slate-50 transition-all flex items-center space-x-1.5 text-slate-700 bg-white"
+        >
+          <i data-lucide="info" class="w-4 h-4 text-indigo-500"></i>
+          <span>💡 사용 가이드</span>
+        </button>
+      </div>
+
+      <!-- 동기화 활성화 배지 -->
+      <div class="hidden sm:flex items-center space-x-1.5 text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-100 font-bold px-3 py-1.5 rounded-full">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+        <span>클라우드 동기화 가동 중</span>
+      </div>
+    </div>
+
+    <!-- 1층: 스마트폰 연결 및 실시간 공유 패널 (기본 숨김) -->
+    <div id="panel-sync-container" class="hidden bg-gradient-to-r from-slate-900 to-indigo-950 text-white p-4 rounded-2xl shadow-md flex flex-col lg:flex-row items-center justify-between gap-4 animate-slideUp">
       <div class="flex items-center space-x-3 w-full lg:w-auto">
         <div class="p-2.5 bg-white/10 rounded-xl text-indigo-300">
           <i data-lucide="smartphone" class="w-5 h-5"></i>
@@ -88,8 +134,9 @@
       </div>
     </div>
 
-    <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
-      
+    <!-- 2층: 업무 진척 상황 바 & 레이아웃 조절 통합 패널 (기본 숨김) -->
+    <div id="panel-progress-container" class="hidden bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4 animate-slideUp">
+      <!-- 왼쪽 반: 전체 업무 완료 현황 -->
       <div class="flex items-center space-x-3 w-full md:w-1/2">
         <div class="p-2 bg-indigo-50 rounded-lg text-indigo-600 flex-shrink-0">
           <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
@@ -103,32 +150,34 @@
         </div>
       </div>
 
+      <!-- 오른쪽 반: 3열, 4열, 5열 선택 버튼 -->
       <div id="layout-select-container" class="flex items-center space-x-1 bg-slate-100 p-1 rounded-xl flex-shrink-0 w-full sm:w-auto justify-center">
         <button id="btn-col-3" onclick="changeColumnCount(3)" class="px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all bg-white text-indigo-600 shadow-sm">3열</button>
         <button id="btn-col-4" onclick="changeColumnCount(4)" class="px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all text-slate-600 hover:text-slate-900">4열</button>
         <button id="btn-col-5" onclick="changeColumnCount(5)" class="px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all text-slate-600 hover:text-slate-900">5열</button>
       </div>
-
     </div>
 
-    <section id="panel-todo" class="space-y-6">
-      <div class="bg-indigo-900 text-white p-4 rounded-2xl shadow-md flex items-center justify-between">
-        <div class="space-y-1">
-          <h3 class="text-sm font-bold flex items-center space-x-1.5">
-            <span>🚀 인텔리전트 업무 대시보드 가이드</span>
-          </h3>
-          <p class="text-xs text-indigo-200">
-            각 열의 제목을 클릭하여 직접 수정할 수 있습니다. 각 리스트당 최대 10개까지 추가 가능하며, 체크하면 즉시 하단으로 정렬되고 글자가 굵어지며 삭제 버튼이 감춰집니다! 작성한 모든 데이터는 자동 저장됩니다.
-          </p>
-        </div>
-        <span class="text-xs bg-indigo-800 border border-indigo-700 font-bold px-3 py-1 rounded-full text-indigo-300 hidden sm:inline animate-pulse">
-          실시간 클라우드 동기화 활성화됨
-        </span>
+    <!-- 3층: 사용 안내 가이드 패널 (기본 숨김) -->
+    <div id="panel-guide-container" class="hidden bg-indigo-900 text-white p-4 rounded-2xl shadow-md flex items-center justify-between animate-slideUp">
+      <div class="space-y-1">
+        <h3 class="text-sm font-bold flex items-center space-x-1.5">
+          <i data-lucide="help-circle" class="w-4 h-4"></i>
+          <span>🚀 인텔리전트 업무 대시보드 가이드</span>
+        </h3>
+        <p class="text-xs text-indigo-200 leading-relaxed">
+          각 열의 제목을 클릭하여 직접 수정할 수 있습니다. 각 리스트당 최대 10개까지 추가 가능하며, 체크하면 즉시 하단으로 정렬되고 글자가 굵어지며 삭제 버튼이 감춰집니다! 작성한 모든 데이터는 자동 저장됩니다.
+        </p>
       </div>
+    </div>
 
+    <!-- 메인 콘텐츠 영역 -->
+    <section id="panel-todo" class="space-y-6">
+      <!-- 멀티 투두 리스트 그리드 -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-start" id="todo-columns-grid"></div>
     </section>
 
+    <!-- 업무 메모장 탭 패널 -->
     <section id="panel-memo" class="grid grid-cols-1 lg:grid-cols-12 gap-8 hidden animate-slideUp">
       <div class="lg:col-span-5 space-y-4">
         <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
@@ -206,6 +255,7 @@
       </div>
     </section>
 
+    <!-- 업무 분야 관리 탭 패널 -->
     <section id="panel-categories" class="grid grid-cols-1 lg:grid-cols-12 gap-8 hidden animate-slideUp">
       <div class="lg:col-span-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm h-fit">
         <h3 class="font-bold text-sm text-slate-900 mb-4 flex items-center space-x-1.5">
@@ -245,7 +295,7 @@
   </div>
 
   <footer class="bg-white border-t border-slate-200 py-6 mt-12">
-    <div class="max-w-7xl mx-auto px-4 text-center text-[10px] text-slate-400 font-semibold tracking-wider uppercase">
+    <div class="max-w-[1600px] mx-auto px-4 text-center text-[10px] text-slate-400 font-semibold tracking-wider uppercase">
       &copy; 2026 Smart WorkSpace System. 모든 정보는 파이어베이스 클라우드에 안전하게 보존됩니다.
     </div>
   </footer>
@@ -255,7 +305,7 @@
     import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
     import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-    // 💡 전달해주신 고유 Firebase 설정 정보 주입 완료!
+    // 💡 Firebase 설정 정보 주입 완료
     const firebaseConfig = {
       apiKey: "AIzaSyDy6A1V9SAb9gyrPSIjPHeep_UG77xLOyE",
       authDomain: "my-work1-c6571.firebaseapp.com",
@@ -265,7 +315,6 @@
       appId: "1:839779982140:web:1b81e735038e52943adc39"
     };
 
-    // Firebase 앱 인스턴스 시작
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
@@ -285,7 +334,6 @@
       5: '🛠 추가 프로젝트 B'
     };
 
-    // --- 주소창에서 워크스페이스 동기화 코드(방 번호) 분석 ---
     function getWorkspaceId() {
       const urlParams = new URLSearchParams(window.location.search);
       const urlWs = urlParams.get('ws');
@@ -296,7 +344,6 @@
       const localWs = localStorage.getItem('sw_current_ws');
       if (localWs) return localWs;
 
-      // 완전 처음 사용자인 경우 고유 6자리 방 번호 랜덤 생성
       const randomId = 'WS-' + Math.random().toString(36).substr(2, 6).toUpperCase();
       localStorage.setItem('sw_current_ws', randomId);
       return randomId;
@@ -305,7 +352,6 @@
     let workspaceId = getWorkspaceId();
     let currentAuthUser = null;
 
-    // --- 전역 앱 상태 관리 데이터 ---
     let categories = DEFAULT_CATEGORIES;
     let columnCount = 3;
     let listTitles = DEFAULT_LIST_TITLES;
@@ -316,7 +362,38 @@
     let searchQuery = '';
     let filterCategory = 'all';
 
-    // --- 클라우드 실시간 데이터 백업 송신 ---
+    // --- 패널 토글 제어 로직 (Accordion 효과) ---
+    window.togglePanel = function(panelType) {
+      const panels = {
+        sync: document.getElementById('panel-sync-container'),
+        progress: document.getElementById('panel-progress-container'),
+        guide: document.getElementById('panel-guide-container')
+      };
+      const buttons = {
+        sync: document.getElementById('btn-toggle-sync'),
+        progress: document.getElementById('btn-toggle-progress'),
+        guide: document.getElementById('btn-toggle-guide')
+      };
+
+      const isCurrentlyHidden = panels[panelType].classList.contains('hidden');
+
+      Object.keys(panels).forEach(key => {
+        if (key === panelType) {
+          if (isCurrentlyHidden) {
+            panels[key].classList.remove('hidden');
+            buttons[key].className = "px-3.5 py-2 text-xs font-bold rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-700 transition-all flex items-center space-x-1.5 shadow-sm";
+          } else {
+            panels[key].classList.add('hidden');
+            buttons[key].className = "px-3.5 py-2 text-xs font-bold rounded-xl border border-slate-200 hover:bg-slate-50 transition-all flex items-center space-x-1.5 text-slate-700 bg-white";
+          }
+        } else {
+          panels[key].classList.add('hidden');
+          buttons[key].className = "px-3.5 py-2 text-xs font-bold rounded-xl border border-slate-200 hover:bg-slate-50 transition-all flex items-center space-x-1.5 text-slate-700 bg-white";
+        }
+      });
+      lucide.createIcons();
+    };
+
     async function saveToCloud() {
       if (!currentAuthUser) return;
       const docRef = doc(db, 'workspaces', workspaceId);
@@ -334,7 +411,6 @@
       }
     }
 
-    // --- 기기 교체/동기화 룸 연결 ---
     window.connectToWorkspace = function() {
       const targetInput = document.getElementById('target-ws-code');
       const targetCode = targetInput.value.trim().toUpperCase();
@@ -346,7 +422,6 @@
       window.location.href = newUrl;
     };
 
-    // --- 간편 공유 링크 복사 (폰으로 보내는 주소) ---
     window.copyShareLink = function() {
       const shareUrl = window.location.origin + window.location.pathname + '?ws=' + workspaceId;
       const tempInput = document.createElement("input");
@@ -359,7 +434,6 @@
       showAlert('모바일 연동용 링크가 클립보드에 복사되었습니다! 카톡으로 폰에 보내세요.', 'success');
     };
 
-    // --- 화면 알림 플러그인 ---
     window.showAlert = function(message, type = 'success') {
       const alertContainer = document.getElementById('alert-container');
       const alertId = `alert-${Date.now()}`;
@@ -380,7 +454,6 @@
       setTimeout(() => { const target = document.getElementById(alertId); if (target) target.remove(); }, 2500);
     };
 
-    // --- 클라우드 감시 리스너 실시간 대기 구동 ---
     function setupCloudSyncListener() {
       const docRef = doc(db, 'workspaces', workspaceId);
       onSnapshot(docRef, (docSnap) => {
@@ -393,13 +466,11 @@
           if (cloudData.memos) memos = cloudData.memos;
           render();
         } else {
-          // 최초 개설된 방일 경우 초기 저장 설정
           saveToCloud();
         }
       });
     }
 
-    // --- 열 개수 변경 처리 ---
     window.changeColumnCount = function(count) {
       columnCount = count;
       saveToCloud();
@@ -412,7 +483,6 @@
       render();
     };
 
-    // --- 상단 탭 전환 ---
     window.switchTab = function(tabId) {
       activeTab = tabId;
       ['todo', 'memo', 'categories'].forEach(t => {
@@ -426,13 +496,16 @@
           panel.classList.add('hidden');
         }
       });
+
       const layoutContainer = document.getElementById('layout-select-container');
-      if (tabId === 'todo') { layoutContainer.classList.remove('hidden'); layoutContainer.classList.add('flex'); }
-      else { layoutContainer.classList.add('hidden'); layoutContainer.classList.remove('flex'); }
+      if (tabId === 'todo') { 
+        layoutContainer.style.display = 'flex'; 
+      } else { 
+        layoutContainer.style.display = 'none'; 
+      }
       render();
     };
 
-    // --- 진척바 연산 ---
     function updateProgress() {
       const activeTodos = todos.filter(t => t.listId <= columnCount);
       const total = activeTodos.length;
@@ -442,7 +515,6 @@
       document.getElementById('progress-bar-fill').style.width = `${percent}%`;
     }
 
-    // --- 멀티 투두 비즈니스 제어문 ---
     window.handleTitleChange = function(listId, newTitle) {
       listTitles[listId] = newTitle;
       saveToCloud();
@@ -490,7 +562,6 @@
       render();
     };
 
-    // --- 업무 메모장 비즈니스 제어문 ---
     window.handleMemoSearch = function(val) { searchQuery = val; renderMemos(); };
     window.handleMemoCategoryFilter = function(val) { filterCategory = val; renderMemos(); };
     
@@ -540,7 +611,6 @@
       render();
     };
 
-    // --- 카테고리 관리 제어문 ---
     window.handleAddCategory = function(e) {
       e.preventDefault();
       const name = document.getElementById('new-cat-name').value.trim();
@@ -561,7 +631,6 @@
       render();
     };
 
-    // --- 핵심 UI 데이터 렌더러 엔진 ---
     function render() {
       updateProgress();
       if (activeTab === 'todo') renderTodos();
@@ -572,9 +641,15 @@
 
     function renderTodos() {
       const grid = document.getElementById('todo-columns-grid');
-      grid.className = columnCount === 3 ? "grid grid-cols-1 md:grid-cols-3 gap-6 items-start" 
-                     : columnCount === 4 ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-start" 
-                     : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-start";
+      
+      // 🌟 md:grid-cols-X 구조로 수정하여 더 작은 해상도에서도 가로 1열 정렬을 유지하도록 강제했습니다.
+      if (columnCount === 3) {
+        grid.className = "grid grid-cols-1 md:grid-cols-3 gap-6 items-start animate-slideUp";
+      } else if (columnCount === 4) {
+        grid.className = "grid grid-cols-1 md:grid-cols-4 gap-4 items-start animate-slideUp";
+      } else {
+        grid.className = "grid grid-cols-1 md:grid-cols-5 gap-2 items-start animate-slideUp";
+      }
 
       let html = '';
       for (let listId = 1; listId <= columnCount; listId++) {
@@ -610,7 +685,7 @@
         }
 
         html += `
-          <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex flex-col min-h-[550px]">
+          <div class="bg-white border border-slate-200 rounded-2xl p-3 shadow-sm flex flex-col min-h-[550px]">
             <div class="mb-3 pb-2 border-b border-slate-100 flex items-center justify-between">
               <input type="text" value="${listTitles[listId] || '목록 '+listId}" oninput="handleTitleChange(${listId}, this.value)" class="w-full text-xs font-bold bg-transparent focus:bg-slate-50 p-1 rounded focus:outline-none"/>
               <span class="text-[9px] px-1.5 py-0.5 rounded-full bg-slate-100">${count}/10</span>
@@ -671,11 +746,9 @@
 
     document.getElementById('new-cat-color').addEventListener('input', (e) => { document.getElementById('new-cat-color-text').innerText = e.target.value; });
 
-    // --- 앱 최초 구동 연동부 ---
     const startApp = async () => {
       document.getElementById('current-ws-code').innerText = workspaceId;
       try {
-        // 클라우드 익명 인증 처리 후 실시간 수신 대기 시작
         onAuthStateChanged(auth, (user) => {
           if (user) { currentAuthUser = user; setupCloudSyncListener(); }
         });
