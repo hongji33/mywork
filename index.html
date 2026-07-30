@@ -54,14 +54,14 @@
 
   <!-- 메인 레이아웃 본문 -->
   <div class="flex-1 max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 space-y-4">
-    
+
     <!-- 🌟 통합 컨트롤 버튼 한 줄 정리 바 -->
     <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3">
       <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
         <!-- 모바일 연동 토글 버튼 -->
-        <button 
-          id="btn-toggle-sync" 
-          onclick="togglePanel('sync')" 
+        <button
+          id="btn-toggle-sync"
+          onclick="togglePanel('sync')"
           class="px-3.5 py-2 text-xs font-bold rounded-xl border border-slate-200 hover:bg-slate-50 transition-all flex items-center space-x-1.5 text-slate-700 bg-white"
         >
           <i data-lucide="smartphone" class="w-4 h-4 text-indigo-500"></i>
@@ -69,9 +69,9 @@
         </button>
 
         <!-- 진행률 & 설정 토글 버튼 -->
-        <button 
-          id="btn-toggle-progress" 
-          onclick="togglePanel('progress')" 
+        <button
+          id="btn-toggle-progress"
+          onclick="togglePanel('progress')"
           class="px-3.5 py-2 text-xs font-bold rounded-xl border border-slate-200 hover:bg-slate-50 transition-all flex items-center space-x-1.5 text-slate-700 bg-white"
         >
           <i data-lucide="bar-chart-2" class="w-4 h-4 text-indigo-500"></i>
@@ -79,9 +79,9 @@
         </button>
 
         <!-- 사용 가이드 토글 버튼 -->
-        <button 
-          id="btn-toggle-guide" 
-          onclick="togglePanel('guide')" 
+        <button
+          id="btn-toggle-guide"
+          onclick="togglePanel('guide')"
           class="px-3.5 py-2 text-xs font-bold rounded-xl border border-slate-200 hover:bg-slate-50 transition-all flex items-center space-x-1.5 text-slate-700 bg-white"
         >
           <i data-lucide="info" class="w-4 h-4 text-indigo-500"></i>
@@ -118,14 +118,14 @@
         </div>
 
         <div class="flex items-center space-x-1 w-full sm:w-auto">
-          <input 
-            type="text" 
-            id="target-ws-code" 
-            placeholder="새 동기화 코드 (예: abcd)" 
+          <input
+            type="text"
+            id="target-ws-code"
+            placeholder="새 동기화 코드 (예: abcd)"
             class="bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 w-44 font-mono"
           />
-          <button 
-            onclick="connectToWorkspace()" 
+          <button
+            onclick="connectToWorkspace()"
             class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-3 py-1.5 rounded-lg transition-colors"
           >
             연결
@@ -507,7 +507,7 @@
       saveToCloud();
       [3, 4, 5].forEach(c => {
         const btn = document.getElementById(`btn-col-${c}`);
-        btn.className = c === count 
+        btn.className = c === count
           ? "px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all bg-white text-indigo-600 shadow-sm"
           : "px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all text-slate-600 hover:text-slate-900";
       });
@@ -529,10 +529,10 @@
       });
 
       const layoutContainer = document.getElementById('layout-select-container');
-      if (tabId === 'todo') { 
-        layoutContainer.style.display = 'flex'; 
-      } else { 
-        layoutContainer.style.display = 'none'; 
+      if (tabId === 'todo') {
+        layoutContainer.style.display = 'flex';
+      } else {
+        layoutContainer.style.display = 'none';
       }
       render();
     };
@@ -596,7 +596,7 @@
 
     window.handleMemoSearch = function(val) { searchQuery = val; renderMemos(); };
     window.handleMemoCategoryFilter = function(val) { filterCategory = val; renderMemos(); };
-    
+
     window.handleSaveMemo = function(e) {
       e.preventDefault();
       const title = document.getElementById('memo-title-input').value.trim();
@@ -673,7 +673,7 @@
 
     function renderTodos() {
       const grid = document.getElementById('todo-columns-grid');
-      
+
       // md:grid-cols-X 구조로 수정하여 더 작은 해상도에서도 가로 1열 정렬을 유지하도록 강제했습니다.
       if (columnCount === 3) {
         grid.className = "grid grid-cols-1 md:grid-cols-3 gap-6 items-start animate-slideUp";
@@ -720,9 +720,9 @@
         html += `
           <div class="bg-white border border-slate-200 rounded-2xl p-3 shadow-sm flex flex-col min-h-[550px]">
             <div class="mb-3 pb-2 border-b border-slate-100 flex items-center justify-between">
-              <input 
-                type="text" 
-                value="${listTitles[listId] || '목록 '+listId}" 
+              <input
+                type="text"
+                value="${listTitles[listId] || '목록 '+listId}"
                 onblur="handleTitleChange(${listId}, this.value)"
                 onkeypress="if(event.key === 'Enter') { handleTitleChange(${listId}, this.value); this.blur(); }"
                 class="w-full text-xs font-bold bg-transparent hover:bg-slate-50 focus:bg-slate-100 p-1 rounded focus:outline-none"
@@ -742,14 +742,14 @@
     function renderMemos() {
       const catSelect = document.getElementById('memo-category-select');
       catSelect.innerHTML = categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-      
+
       const filterSelect = document.getElementById('memo-filter-category');
       filterSelect.innerHTML = '<option value="all">전체 분야 보기</option>' + categories.map(c => `<option value="${c.id}" ${filterCategory===c.id?'selected':''}>${c.name}</option>`).join('');
 
       const filtered = memos.filter(m => (m.title.toLowerCase().includes(searchQuery.toLowerCase()) || m.content.toLowerCase().includes(searchQuery.toLowerCase())) && (filterCategory==='all' || m.categoryId===filterCategory));
       document.getElementById('memo-count-label').innerText = `검색 결과 목록 (${filtered.length})`;
 
-      document.getElementById('memos-list-grid').innerHTML = filtered.length === 0 
+      document.getElementById('memos-list-grid').innerHTML = filtered.length === 0
         ? `<div class="bg-white rounded-2xl p-12 text-center text-slate-400 col-span-2 text-xs">보관된 메모가 없습니다.</div>`
         : filtered.map(m => {
             const cat = categories.find(c => c.id === m.categoryId) || { name: '일반', color: '#64748B' };
